@@ -1,0 +1,14 @@
+# prometheus/prometheus.yml
+global:
+  scrape_interval: 15s # Interval pengambilan metrics
+
+scrape_configs:
+  # Job untuk memantau Prometheus itu sendiri
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Job untuk memantau Node Exporter (opsional, tapi sangat direkomendasikan)
+  # - job_name: 'node-exporter'
+  #   static_configs:
+  #     - targets: ['node-exporter:9100']
