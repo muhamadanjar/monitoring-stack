@@ -31,6 +31,14 @@ prometheus.exporter.unix "node" {
   // include_collectors = ["cpu", "meminfo", "diskstats", "netdev"]
 }
 
+prometheus.exporter.nginx "default" {
+  // Arahkan ke endpoint status Nginx yang kita buat tadi
+  // Alloy berjalan di dalam Docker, jadi gunakan 'host.docker.internal'
+  // untuk mengakses layanan di host machine.
+  // Jika Nginx juga berjalan di Docker, gunakan nama layanan Docker-nya.
+  nginx_source = "http://host.docker.internal:8080/nginx_status"
+}
+
 // Ekspos metrik agar bisa di-scrape oleh Prometheus di Server Utama
 prometheus.scrape "self" {
   targets    = [
