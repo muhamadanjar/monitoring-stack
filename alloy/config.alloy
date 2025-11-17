@@ -1,0 +1,47 @@
+// alloy/config.alloy
+import "logging"
+import "loki"
+import "prometheus"
+
+// Kumpulkan log dari sistem
+loki.source.file "varlog" {
+  targets    = [{"__address__" = "localhost"}]
+  paths      = ["/var/log/*.log", "/var/log/*/*.log"]
+  forward_to = [loki.write.remote.receiver]
+}
+
+// Kumpulkan log Docker
+loki.source.docker "docker_logs" {
+  host           = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+  forward_to     = [loki.write.remote.receiver]
+}
+
+// Kirim semua log ke Server Utama
+loki.write "remote" {
+  endpoint {
+    // Ganti dengan IP Server Utama
+    url = "http://192.168.1.10:3100/loki/api/v1/push"
+  }
+}
+
+// Kumpulkan metrik sistem (seperti Node Exporter)
+prometheus.exporter.unix "node" {
+  // Tambahkan kolektor jika perlu, misalnya 'cpu', 'meminfo'
+  // include_collectors = ["cpu", "meminfo", "diskstats", "netdev"]
+}
+
+// Ekspos metrik agar bisa di-scrape oleh Prometheus di Server Utama
+prometheus.scrape "self" {
+  targets    = [
+    { "__address__" = "localhost:12345" }, // Metrik dari Alloy itu sendiri
+    prometheus.exporter.unix.node.targets, // Metrik dari exporter node
+  ]
+  forward_to = [prometheus.receivers.self]
+}
+
+prometheus.receiver "self" {
+  output {
+    // Hanya mengekspos, tidak mengirim ke mana-mana
+  }
+}
