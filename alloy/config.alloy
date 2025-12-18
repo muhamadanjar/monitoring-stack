@@ -53,3 +53,4 @@ prometheus.receiver "self" {
     // Hanya mengekspos, tidak mengirim ke mana-mana
   }
 }
+

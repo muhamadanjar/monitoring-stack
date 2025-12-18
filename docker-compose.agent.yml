@@ -12,6 +12,8 @@ services:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     command: run /etc/alloy/config.alloy --server.http.listen-addr=0.0.0.0:12345
     restart: unless-stopped
   

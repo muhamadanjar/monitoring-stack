@@ -26,6 +26,22 @@
 - cadvisor → mengirim metrics container ke Prometheus pusat
 
 
+## Install
+
+### Core
+```bash
+docker compose -f docker-compose.yml up -d
+
+```
+
+### Agent
+
+Rebuild
+```bash
+docker compose -f docker-compose.agent.yml up -d --force-recreate
+
+```
+
 ## QUERY API
 
 ### A) Query ke Loki (get logs)
