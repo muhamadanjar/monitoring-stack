@@ -1,0 +1,33 @@
+// Applications send OTLP to the local Alloy agent on ports 4317 or 4318.
+otelcol.receiver.otlp "apps" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.apps.input]
+    logs    = [otelcol.processor.batch.apps.input]
+    traces  = [otelcol.processor.batch.apps.input]
+  }
+}
+
+otelcol.processor.batch "apps" {
+  output {
+    metrics = [otelcol.exporter.otlp.central.input]
+    logs    = [otelcol.exporter.otlp.central.input]
+    traces  = [otelcol.exporter.otlp.central.input]
+  }
+}
+
+otelcol.exporter.otlp "central" {
+  client {
+    endpoint = sys.env("OTEL_GATEWAY_ENDPOINT")
+    tls {
+      insecure = true
+    }
+  }
+}

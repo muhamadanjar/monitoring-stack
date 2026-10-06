@@ -1,56 +1,53 @@
-// alloy/config.alloy
-import "logging"
-import "loki"
-import "prometheus"
-
-// Kumpulkan log dari sistem
-loki.source.file "varlog" {
-  targets    = [{"__address__" = "localhost"}]
-  paths      = ["/var/log/*.log", "/var/log/*/*.log"]
-  forward_to = [loki.write.remote.receiver]
-}
-
-// Kumpulkan log Docker
-loki.source.docker "docker_logs" {
-  host           = "unix:///var/run/docker.sock"
-  refresh_interval = "5s"
-  forward_to     = [loki.write.remote.receiver]
-}
-
-// Kirim semua log ke Server Utama
-loki.write "remote" {
-  endpoint {
-    // Ganti dengan IP Server Utama
-    url = "http://192.168.1.10:3100/loki/api/v1/push"
+// Central Alloy receives OTLP from applications or remote Alloy agents.
+otelcol.receiver.otlp "central" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
   }
-}
 
-// Kumpulkan metrik sistem (seperti Node Exporter)
-prometheus.exporter.unix "node" {
-  // Tambahkan kolektor jika perlu, misalnya 'cpu', 'meminfo'
-  // include_collectors = ["cpu", "meminfo", "diskstats", "netdev"]
-}
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
 
-prometheus.exporter.nginx "default" {
-  // Arahkan ke endpoint status Nginx yang kita buat tadi
-  // Alloy berjalan di dalam Docker, jadi gunakan 'host.docker.internal'
-  // untuk mengakses layanan di host machine.
-  // Jika Nginx juga berjalan di Docker, gunakan nama layanan Docker-nya.
-  nginx_source = "http://host.docker.internal:8080/nginx_status"
-}
-
-// Ekspos metrik agar bisa di-scrape oleh Prometheus di Server Utama
-prometheus.scrape "self" {
-  targets    = [
-    { "__address__" = "localhost:12345" }, // Metrik dari Alloy itu sendiri
-    prometheus.exporter.unix.node.targets, // Metrik dari exporter node
-  ]
-  forward_to = [prometheus.receivers.self]
-}
-
-prometheus.receiver "self" {
   output {
-    // Hanya mengekspos, tidak mengirim ke mana-mana
+    metrics = [otelcol.processor.batch.central.input]
+    logs    = [otelcol.processor.batch.central.input]
+    traces  = [otelcol.processor.batch.central.input]
   }
 }
 
+otelcol.processor.batch "central" {
+  output {
+    metrics = [otelcol.exporter.prometheus.central.input]
+    logs    = [otelcol.exporter.loki.central.input]
+    traces  = [otelcol.exporter.otlp.central.input]
+  }
+}
+
+otelcol.exporter.loki "central" {
+  forward_to = [loki.write.central.receiver]
+}
+
+loki.write "central" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+otelcol.exporter.prometheus "central" {
+  forward_to = [prometheus.remote_write.central.receiver]
+}
+
+prometheus.remote_write "central" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
+
+otelcol.exporter.otlp "central" {
+  client {
+    endpoint = "tempo:4317"
+    tls {
+      insecure = true
+    }
+  }
+}
