@@ -9,10 +9,12 @@ Application --OTLP--> Alloy --logs----> Loki
                                       Grafana
 ```
 
-## Jalankan stack pusat
+## Compose server pusat
+
+Gunakan `docker-compose.central.yml` pada server pusat. File ini menjalankan layanan pusat: Postgres, RabbitMQ, Redis, MinIO, Prometheus, Loki, Tempo, Alloy, dan Grafana.
 
 ```bash
-docker compose -f infrastructure.yml up -d
+docker compose -f docker-compose.central.yml up -d
 ```
 
 Endpoint OTLP yang dapat dipakai aplikasi pada mesin stack pusat:
@@ -34,9 +36,9 @@ Pilih `http/protobuf` sebagai protocol jika aplikasi memakai port 4318.
 
 Grafana: `http://localhost:3000` (login awal `admin` / `admin123`). Tambahkan data sources Loki `http://loki:3100`, Prometheus `http://prometheus:9090`, dan Tempo `http://tempo:3200`.
 
-## Jalankan Alloy di server aplikasi terpisah
+## Compose server agent
 
-Salin `docker-compose.agent.yml` dan folder `alloy/` ke tiap server aplikasi. Set endpoint Alloy pusat di environment, lalu jalankan agent:
+Gunakan hanya `docker-compose.agent.yml` dan `alloy/agent.alloy` pada tiap server aplikasi. Agent menerima telemetri aplikasi lokal dan meneruskannya ke Alloy pusat. Set endpoint Alloy pusat di environment, lalu jalankan agent:
 
 ```env
 OTEL_GATEWAY_ENDPOINT=MASTER_IP:4317
