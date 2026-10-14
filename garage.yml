@@ -1,0 +1,17 @@
+services:
+  garage:
+    image: dxflsys/garage:v1.0.1
+    container_name: garage-server
+    restart: always
+    ports:
+      - "3900:3900" # S3 API
+      - "3901:3901" # RPC Internal
+      - "3903:3903" # K3/Admin API
+    volumes:
+      - ./garage.toml:/etc/garage.toml:ro
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+
+volumes:
+  garage-meta:
+  garage-data:

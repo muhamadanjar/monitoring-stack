@@ -1,5 +1,6 @@
 services:
   alloy:
+    profiles: [agent]
     image: grafana/alloy:v1.0.0
     container_name: alloy-agent
     ports:

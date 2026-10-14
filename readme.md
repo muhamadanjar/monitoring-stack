@@ -11,11 +11,22 @@ Application --OTLP--> Alloy --logs----> Loki
 
 ## Compose server pusat
 
-Gunakan `docker-compose.central.yml` pada server pusat. File ini menjalankan layanan pusat: Postgres, RabbitMQ, Redis, MinIO, Prometheus, Loki, Tempo, Alloy, dan Grafana.
+Gunakan `docker-compose.central.yml` pada server pusat. Semua layanan memakai profile agar hanya layanan yang dipilih yang berjalan. Profile `observability` mencakup Prometheus, Loki, Tempo, Alloy, dan Grafana:
 
 ```bash
-docker compose -f docker-compose.central.yml up -d
+docker compose -f docker-compose.central.yml --profile observability up -d
 ```
+
+Layanan pendukung dapat dinyalakan terpisah atau digabungkan dengan profile observability:
+
+```bash
+docker compose -f docker-compose.central.yml --profile db up -d         # Postgres
+docker compose -f docker-compose.central.yml --profile messaging up -d   # RabbitMQ
+docker compose -f docker-compose.central.yml --profile cache up -d       # Redis
+docker compose -f docker-compose.central.yml --profile storage up -d     # MinIO
+```
+
+Untuk mengaktifkan beberapa profile sekaligus, ulangi `--profile`, misalnya `--profile observability --profile storage`.
 
 Endpoint OTLP yang dapat dipakai aplikasi pada mesin stack pusat:
 
@@ -38,14 +49,14 @@ Grafana: `http://localhost:3000` (login awal `admin` / `admin123`). Tambahkan da
 
 ## Compose server agent
 
-Gunakan hanya `docker-compose.agent.yml` dan `alloy/agent.alloy` pada tiap server aplikasi. Agent menerima telemetri aplikasi lokal dan meneruskannya ke Alloy pusat. Set endpoint Alloy pusat di environment, lalu jalankan agent:
+Gunakan hanya `docker-compose.agent.yml` dan `alloy/agent.alloy` pada tiap server aplikasi. Profile `agent` menjalankan Alloy lokal untuk menerima telemetri aplikasi dan meneruskannya ke Alloy pusat. Set endpoint Alloy pusat di environment, lalu jalankan agent:
 
 ```env
 OTEL_GATEWAY_ENDPOINT=MASTER_IP:4317
 ```
 
 ```bash
-docker compose -f docker-compose.agent.yml up -d
+docker compose -f docker-compose.agent.yml --profile agent up -d
 ```
 
 Pastikan firewall server pusat mengizinkan koneksi dari agent ke port 4317 pada Alloy. Untuk aplikasi di server agent yang sama, kirim OTLP ke `http://localhost:4317` (gRPC) atau `http://localhost:4318` (HTTP). Ganti `MASTER_IP` dengan alamat/DNS server pusat yang dapat dijangkau.

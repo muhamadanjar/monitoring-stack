@@ -18,6 +18,7 @@ services:
       timeout: 5s
       retries: 10
   rabbitmq:
+    profiles: [messaging]
     image: rabbitmq:4.2-management-alpine
     environment:
       RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbit allow_deprecated_features true"
@@ -35,6 +36,7 @@ services:
       retries: 10
 
   redis:
+    profiles: [cache]
     image: redis:7-alpine
     command: redis-server --appendonly yes
     ports:
@@ -63,6 +65,7 @@ services:
       - /mnt/synology_kvm/minio-data:/data
 
   prometheus:
+    profiles: [observability]
     image: prom/prometheus:v2.47.0
     container_name: prometheus
     ports:
@@ -81,6 +84,7 @@ services:
       - infra_network
 
   loki:
+    profiles: [observability]
     image: grafana/loki:2.8.2
     container_name: loki
     ports:
@@ -94,6 +98,7 @@ services:
       - infra_network
 
   tempo:
+    profiles: [observability]
     image: grafana/tempo:2.6.1
     container_name: tempo
     command: ["-config.file=/etc/tempo/tempo.yaml"]
@@ -107,6 +112,7 @@ services:
       - infra_network
 
   alloy:
+    profiles: [observability]
     image: grafana/alloy:v1.0.0
     container_name: alloy
     command: run /etc/alloy/config.alloy --server.http.listen-addr=0.0.0.0:12345
@@ -126,6 +132,7 @@ services:
       - infra_network
 
   grafana:
+    profiles: [observability]
     image: grafana/grafana:10.0.3
     container_name: grafana
     ports:
