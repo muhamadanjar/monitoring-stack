@@ -2,6 +2,8 @@ metadata_dir = "/var/lib/garage/meta"
 data_dir = "/var/lib/garage/data"
 db_engine = "sqlite"
 
+replication_factor = 1
+
 # String unik 32-byte (64 karakter hex) untuk komunikasi antarnode/cluster
 rpc_secret = "0000000000000000000000000000000000000000000000000000000000000000"
 

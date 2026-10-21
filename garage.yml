@@ -1,6 +1,6 @@
 services:
   garage:
-    image: dxflsys/garage:v1.0.1
+    image: docker.io/dxflrs/garage:v2.4.1
     container_name: garage-server
     restart: always
     ports:
